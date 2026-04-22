@@ -5,6 +5,7 @@ import { exchangeCodeForToken } from "@/lib/spotify";
 
 export default function CallbackPage() {
   const [message, setMessage] = useState("Finishing Spotify login...");
+  const [details, setDetails] = useState("");
 
   useEffect(() => {
     const finishLogin = async () => {
@@ -13,12 +14,14 @@ export default function CallbackPage() {
       const error = params.get("error");
 
       if (error) {
-        setMessage(`Spotify returned an error: ${error}`);
+        setMessage("Spotify returned an authorization error.");
+        setDetails(error);
         return;
       }
 
       if (!code) {
         setMessage("No Spotify code was found in the callback URL.");
+        setDetails(window.location.href);
         return;
       }
 
@@ -44,7 +47,12 @@ export default function CallbackPage() {
         window.location.href = "/";
       } catch (error) {
         console.error(error);
+
+        const actualMessage =
+          error instanceof Error ? error.message : "Unknown token exchange error.";
+
         setMessage("Spotify login failed while exchanging the code for a token.");
+        setDetails(actualMessage);
       }
     };
 
@@ -53,12 +61,18 @@ export default function CallbackPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 text-white">
-      <div className="max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
+      <div className="max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
         <p className="text-sm uppercase tracking-[0.3em] text-lime-400">
           Play My Mood
         </p>
         <h1 className="mt-4 text-3xl font-bold">Spotify callback</h1>
         <p className="mt-4 text-zinc-300">{message}</p>
+
+        {details ? (
+          <div className="mt-6 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-left text-sm text-amber-100 break-words">
+            {details}
+          </div>
+        ) : null}
       </div>
     </main>
   );
